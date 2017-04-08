@@ -44,7 +44,7 @@ const getImages = (urls, interval) => {
   return co(function *() {
     for(let i in urls) {
       const url = urls[i];
-      const fileName = path.basename(url).split(':')[0];
+      const fileName = `images/${path.basename(url).split(':')[0]}`;
       console.log(`${+i+1}/${urls.length} ${fileName}`);
       const response = yield axios.get(url, {responseType: 'stream'});
       response.data.pipe(fs.createWriteStream(fileName));
