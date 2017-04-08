@@ -28,10 +28,8 @@ async function clickMoreButtonIfExist(nightmare) {
   }
 }
 
-async function getTogetterImageUrls(togetterUrl) {
+async function getTogetterImageUrls(nightmare, togetterUrl) {
   console.log(`fetching image urls... [${togetterUrl}]`);
-
-  const nightmare = Nightmare();
 
   await nightmare.goto(togetterUrl);
   await clickMoreButtonIfExist(nightmare);
@@ -41,7 +39,6 @@ async function getTogetterImageUrls(togetterUrl) {
     return Array.prototype.map.call(nodeList, (node) => node.src);
   });
 
-  await nightmare.end();
   return urls;
 }
 
@@ -56,14 +53,12 @@ async function getImages(urls, interval) {
   }
 }
 
-async function getTogetterImages(togetterUrl, interval) {
-  const urls = await getTogetterImageUrls(togetterUrl);
+async function getTogetterImages(nightmare, togetterUrl, interval) {
+  const urls = await getTogetterImageUrls(nightmare, togetterUrl);
   return await getImages(urls, interval);
 }
 
-async function getMaxPage(togetterUrl) {
-  const nightmare = Nightmare();
-
+async function getMaxPage(nightmare, togetterUrl) {
   await nightmare.goto(togetterUrl);
 
   console.log(`fetching max page... [${togetterUrl}]`);
@@ -74,8 +69,6 @@ async function getMaxPage(togetterUrl) {
     return Array.prototype.map.call(nodeList, (node) => node.textContent);
   });
 
-  await nightmare.end();
-
   const pages = pageLinks
     .filter(link => /^[0-9]+$/.test(link))
     .map(Number);
@@ -84,11 +77,14 @@ async function getMaxPage(togetterUrl) {
 }
 
 async function main(togetterUrl, interval) {
-  const maxPage = await getMaxPage(togetterUrl);
-  for(let i = 0; i < maxPage; i++) {
-    console.log(`page ${i+1}/${maxPage}`);
-    await getTogetterImages(togetterUrl + '?page=' + (i+1), interval);
+  const nightmare = Nightmare();
+  const maxPage = await getMaxPage(nightmare, togetterUrl);
+  for(let i = 1; i <= maxPage; i++) {
+    console.log(`page ${i}/${maxPage}`);
+    await getTogetterImages(nightmare, `${togetterUrl}?page=${i}`, interval);
   }
+
+  await nightmare.end();
 }
 
 
